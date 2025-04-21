@@ -286,7 +286,7 @@ void setup()
 void loop()
 {
   
-  if (ss.available()) {
+  /*if (ss.available()) {
     while (ss.available()) {
       char c = ss.read();
       Serial.print(c); // Debug: Print raw GPS data
@@ -297,7 +297,7 @@ void loop()
     }
   } else {
     Serial.println(F("No data available from GPS module."));
-  }
+  }*/
 
   // compare the previous status to the current status
   if (status != WiFi.status())
