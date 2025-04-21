@@ -4,7 +4,6 @@
 #include "ArduinoJson.h"
 #include "html.h"
 #include <string>
-<<<<<<< Updated upstream
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 // GPS Declarations
@@ -77,8 +76,6 @@ int servoAngle = 0; // Initial angle for the servo
 #define SECRET_SSID "DennisNet"
 #define SECRET_PASS "dennis_is_a_menace"
 =======
-=======
->>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
