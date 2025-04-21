@@ -4,8 +4,6 @@
 #include "ArduinoJson.h"
 #include "html.h"
 #include <string>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 // GPS Declarations
@@ -98,9 +96,6 @@ int keyIndex = 0;          // your network key index number (needed only for WEP
 int status = WL_IDLE_STATUS;
 // END WiFi Credentials
 
-<<<<<<< Updated upstream
-// HTTP Declarations
-=======
 int distance = 0; // Variable to store the distance value
 int duration = 0; // Variable to store the duration value
 
@@ -110,7 +105,6 @@ int duration = 0; // Variable to store the duration value
 Servo myServo;
 int servoAngle = 0; // Initial angle for the servo
 
->>>>>>> Stashed changes
 WiFiServer server(80);
 class HttpRequest
 {
