@@ -5,6 +5,7 @@
 #include "html.h"
 #include <string>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 // GPS Declarations
@@ -77,6 +78,8 @@ int servoAngle = 0; // Initial angle for the servo
 #define SECRET_SSID "DennisNet"
 #define SECRET_PASS "dennis_is_a_menace"
 =======
+=======
+>>>>>>> Stashed changes
 
 #define MOTOR_PIN 9
 #define SERVO_PIN 10
@@ -85,6 +88,9 @@ int servoAngle = 0; // Initial angle for the servo
 #define US_TRIG_PIN 2
 #define US_ECHO_PIN 3
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
@@ -95,6 +101,9 @@ int status = WL_IDLE_STATUS;
 <<<<<<< Updated upstream
 // HTTP Declarations
 =======
+int distance = 0; // Variable to store the distance value
+int duration = 0; // Variable to store the duration value
+
 int distance = 0; // Variable to store the distance value
 int duration = 0; // Variable to store the duration value
 
