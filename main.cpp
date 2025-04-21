@@ -14,7 +14,7 @@ TinyGPSPlus gps;
 SoftwareSerial ss(RXPin, TXPin); // RX, TX
 void displayInfo()
 {
-  Serial.print(F("Location: "));
+  Serial.print(F("Location: ")); 
   if (gps.location.isValid())
   {
     Serial.print(gps.location.lat(), 6);
@@ -43,20 +43,16 @@ void displayInfo()
   Serial.print(F(" "));
   if (gps.time.isValid())
   {
-    if (gps.time.hour() < 10)
-      Serial.print(F("0"));
+    if (gps.time.hour() < 10) Serial.print(F("0"));
     Serial.print(gps.time.hour());
     Serial.print(F(":"));
-    if (gps.time.minute() < 10)
-      Serial.print(F("0"));
+    if (gps.time.minute() < 10) Serial.print(F("0"));
     Serial.print(gps.time.minute());
     Serial.print(F(":"));
-    if (gps.time.second() < 10)
-      Serial.print(F("0"));
+    if (gps.time.second() < 10) Serial.print(F("0"));
     Serial.print(gps.time.second());
     Serial.print(F("."));
-    if (gps.time.centisecond() < 10)
-      Serial.print(F("0"));
+    if (gps.time.centisecond() < 10) Serial.print(F("0"));
     Serial.print(gps.time.centisecond());
   }
   else
@@ -79,20 +75,15 @@ int servoAngle = 0; // Initial angle for the servo
 // WiFi Credentials
 #define SECRET_SSID "DennisNet"
 #define SECRET_PASS "dennis_is_a_menace"
-#define US_TRIG_PIN 2
-#define US_ECHO_PIN 3
 char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;          // your network key index number (needed only for WEP)
 int status = WL_IDLE_STATUS;
 // END WiFi Credentials
 
-int distance = 0; // Variable to store the distance value
-int duration = 0; // Variable to store the duration value
-
+// HTTP Declarations
 WiFiServer server(80);
-class HttpRequest
-{
+class HttpRequest {
 public:
   String method;
   String path;
@@ -102,13 +93,11 @@ public:
   String userAgent;
   String host;
 
-  HttpRequest(const String &rawData)
-  {
+  HttpRequest(const String& rawData) {
     parse(rawData);
   }
 
-  void parse(const String &rawData)
-  {
+  void parse(const String& rawData) {
     int methodEnd = rawData.indexOf(' ');
     method = rawData.substring(0, methodEnd);
 
@@ -117,40 +106,23 @@ public:
     String fullPath = rawData.substring(pathStart, pathEnd);
 
     int queryStart = fullPath.indexOf('?');
-    if (queryStart != -1)
-    {
+    if (queryStart != -1) {
       path = fullPath.substring(0, queryStart);
       query = fullPath.substring(queryStart + 1);
-    }
-    else
-    {
+    } else {
       path = fullPath;
       query = "";
     }
 
     int bodyStart = rawData.indexOf("\r\n\r\n");
-    if (bodyStart != -1)
-    {
+    if (bodyStart != -1) {
       String bodyString = rawData.substring(bodyStart + 4);
-      if (!bodyString.isEmpty())
-      {
-        DeserializationError error = deserializeJson(body, bodyString);
-        if (error)
-        {
-          Serial.print(F("deserializeJson() failed: "));
-          Serial.println(error.f_str());
-          body.clear(); // Clear the body to avoid using invalid data
-        }
+      DeserializationError error = deserializeJson(body, bodyString);
+      if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
       }
-      else
-      {
-        Serial.println(F("deserializeJson() failed: EmptyInput"));
-        body.clear();
-      }
-    }
-    else
-    {
-      Serial.println(F("No body found in the request"));
+    } else {
       body.clear();
     }
     /*
@@ -166,11 +138,9 @@ public:
   }
 
 private:
-  String extractHeaderValue(const String &rawData, const String &headerName)
-  {
+  String extractHeaderValue(const String& rawData, const String& headerName) {
     int headerStart = rawData.indexOf(headerName);
-    if (headerStart != -1)
-    {
+    if (headerStart != -1) {
       int valueStart = headerStart + headerName.length();
       int valueEnd = rawData.indexOf("\r\n", valueStart);
       return rawData.substring(valueStart, valueEnd);
@@ -179,19 +149,17 @@ private:
   }
 };
 
-class HttpResponse
-{
+class HttpResponse {
 public:
   int statusCode;
   String statusMessage;
   String contentType;
   String body;
 
-  HttpResponse(int code = 200, const String &message = "OK", const String &type = "application/json", const String &content = "")
+  HttpResponse(int code = 200, const String& message = "OK", const String& type = "application/json", const String& content = "")
       : statusCode(code), statusMessage(message), contentType(type), body(content) {}
 
-  String toString() const
-  {
+  String toString() const {
     String response = "HTTP/1.1 " + String(statusCode) + " " + statusMessage + "\r\n";
     response += "Content-Type: " + contentType + "\r\n";
     response += "Content-Length: " + String(body.length()) + "\r\n";
@@ -216,92 +184,43 @@ void printWiFiStatus()
   Serial.print("To see this page in action, open a browser to http://");
   Serial.println(ip);
 }
-void updateDistance()
-{
-  // Update the distance value using ultrasonic sensor
-  digitalWrite(US_TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(US_TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(US_TRIG_PIN, LOW);
-  duration = pulseIn(US_ECHO_PIN, HIGH);
 
-  // Ensure duration is valid before calculating distance
-  if (duration > 0)
-  {
-    distance = duration * 0.034 / 2; // Calculate distance in cm
-  }
-  else
-  {
-    distance = -1; // Indicate an invalid reading
-  }
-  Serial.print("Distance: ");
-  if (distance >= 0)
-  {
-    Serial.println(distance);
-  }
-  else
-  {
-    Serial.println("Invalid reading");
-  }
-}
-void respond(HttpRequest &request, WiFiClient &client)
-{
-  if (request.method == "GET" && request.path == "/panel/")
-  {
+void respond(HttpRequest& request, WiFiClient& client) {
+  if (request.method == "GET" && request.path == "/panel/") {
     // Handle GET request for the root path
     String panelContent = String(htmlContent.c_str()); // Use the HTML content defined in html.h
     client.println(HttpResponse(200, "OK", "text/html", panelContent).toString());
-  }
+    
+  } 
 
-  else if (request.method == "POST" && request.path == "/control/motor")
-  {
+  else if (request.method == "POST" && request.path == "/control/motor") {
     // Handle POST request for motor control
-    if (request.body.containsKey("motor"))
-    {
+    if (request.body.containsKey("motor")) {
       int motorValue = request.body["motor"].as<int>();
       Serial.print("Motor value received: ");
       Serial.println(motorValue);
       // Add your motor control logic here
       client.println(HttpResponse(200, "OK", "application/json", "{\"status\": \"Motor value received\"}").toString());
       analogWrite(motor_pin, motorValue); // Set the motor speed (0-255)
-    }
-    else
-    {
+    } else {
       client.println(HttpResponse(400, "Bad Request", "application/json", "{\"error\": \"Invalid motor value\"}").toString());
     }
   }
-  else if (request.method == "POST" && request.path == "/control/servo")
-  {
+  else if (request.method == "POST" && request.path == "/control/servo") {
     // Handle POST request for servo control
-    if (request.body.containsKey("servo"))
-    {
+    if (request.body.containsKey("servo")) {
       int servoValue = request.body["servo"].as<int>();
       Serial.print("Servo value received: ");
       Serial.println(servoValue);
       // Add your servo control logic here
       client.println(HttpResponse(200, "OK", "application/json", "{\"status\": \"Servo value received\"}").toString());
       myServo.write(servoValue); // Set the servo angle (0-180)
-    }
-    else
-    {
+    } else {
       client.println(HttpResponse(400, "Bad Request", "application/json", "{\"error\": \"Invalid servo value\"}").toString());
     }
   }
-  else if (request.method == "GET" && request.path == "/control/distance")
-  {
-    updateDistance(); // Update the distance value using ultrasonic sensor
-    // Handle POST request for servo control
-    Serial.print("Distance value requested: ");
-    Serial.println(distance);
-    JsonDocument response;
-    response["distance"] = distance;
-    String responseBody;
-    serializeJson(response, responseBody);
-    client.println(HttpResponse(200, "OK", "application/json", responseBody).toString());
-  }
-  else
-  {
+  
+  else {
     // Handle other requests (e.g., POST, PUT, DELETE)
     client.println(HttpResponse(404, "Not Found", "application/json", "{\"error\": \"Not Found\"}").toString());
   }
@@ -317,6 +236,7 @@ void respond(HttpRequest &request, WiFiClient &client)
 }
 // END HTTP Declarations
 
+
 void setup()
 {
   Serial.begin(9600);
@@ -326,14 +246,12 @@ void setup()
   }
   // Initialize Motors
   pinMode(motor_pin, OUTPUT);
-  pinMode(US_TRIG_PIN, OUTPUT);
-  pinMode(US_ECHO_PIN, INPUT);
   myServo.attach(SERVO_PIN);
   myServo.write(servoAngle);
 
   // Initialize GPS
-  /*ss.begin(GPSBaud);
-  if (WiFi.status() == WL_NO_MODULE)
+  ss.begin(GPSBaud);
+  /*if (WiFi.status() == WL_NO_MODULE)
   {
     Serial.println("Communication with WiFi module failed!");
     while (true)
@@ -364,9 +282,10 @@ void setup()
   server.begin();
   printWiFiStatus();
 }
+
 void loop()
 {
-
+  
   /*if (ss.available()) {
     while (ss.available()) {
       char c = ss.read();
@@ -380,7 +299,6 @@ void loop()
     Serial.println(F("No data available from GPS module."));
   }*/
 
-  // Update the distance value using ultrasonic sensor
   // compare the previous status to the current status
   if (status != WiFi.status())
   {
@@ -409,32 +327,32 @@ void loop()
     {
       if (client.available())
       {
-        char c = client.read();
-        data += c;
+      char c = client.read();
+      data += c;
 
-        // Detect the end of the HTTP headers (double CRLF)
-        if (data.indexOf("\r\n\r\n") != -1)
+      // Detect the end of the HTTP headers (double CRLF)
+      if (data.indexOf("\r\n\r\n") != -1)
+      {
+        // Check if there's a Content-Length header to read the body
+        String contentLengthHeader = "Content-Length: ";
+        int contentLengthIndex = data.indexOf(contentLengthHeader);
+        if (contentLengthIndex != -1)
         {
-          // Check if there's a Content-Length header to read the body
-          String contentLengthHeader = "Content-Length: ";
-          int contentLengthIndex = data.indexOf(contentLengthHeader);
-          if (contentLengthIndex != -1)
-          {
-            int valueStart = contentLengthIndex + contentLengthHeader.length();
-            int valueEnd = data.indexOf("\r\n", valueStart);
-            int contentLength = data.substring(valueStart, valueEnd).toInt();
+        int valueStart = contentLengthIndex + contentLengthHeader.length();
+        int valueEnd = data.indexOf("\r\n", valueStart);
+        int contentLength = data.substring(valueStart, valueEnd).toInt();
 
-            // Read the body based on Content-Length
-            while (data.length() < data.indexOf("\r\n\r\n") + 4 + contentLength)
-            {
-              if (client.available())
-              {
-                data += (char)client.read();
-              }
-            }
+        // Read the body based on Content-Length
+        while (data.length() < data.indexOf("\r\n\r\n") + 4 + contentLength)
+        {
+          if (client.available())
+          {
+          data += (char)client.read();
           }
-          break;
         }
+        }
+        break;
+      }
       }
     }
     // Serial.println(data);
