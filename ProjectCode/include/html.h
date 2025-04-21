@@ -94,6 +94,10 @@ const std::string htmlContent = R"(
                 <p style="font-weight: 100 !important; font-size: medium !important;" id="servo-speed">0</p>
             </div>
         </div>
+        <div class="control">
+            <p>Ultrasonic Distance</p>
+            <p style="font-size: x-large; font-weight: 100;"><span id="distance">0</span> cm</p>
+        </div>
     </div>
     <script>
         const motorSlider = document.getElementById("motor");
@@ -137,6 +141,23 @@ const std::string htmlContent = R"(
                 }
             };
         });
+
+        function updateDistance() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/control/distance", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        document.getElementById("distance").innerText = response.distance;
+                    } else {
+                        console.error("Error fetching distance:", xhr.statusText);
+                    }
+                }
+            };
+            xhr.send();
+        }
+        setInterval(updateDistance, 500); // Update distance every second
 
 
     </script>
