@@ -1,25 +1,87 @@
 #include <Arduino.h>
 #include <Servo.h>
-
-#define MOTOR_PIN 9
-#define SERVO_PIN 10
-#define SECRET_SSID "DennisNet"
-#define SECRET_PASS "dennis_is_a_menace"
-
 #include "WiFiS3.h"
 #include "ArduinoJson.h"
 #include "html.h"
 #include <string>
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+// GPS Declarations
+static const int TXPin = 11, RXPin = 10;
+static const uint32_t GPSBaud = 9600;
+
+TinyGPSPlus gps;
+SoftwareSerial ss(RXPin, TXPin); // RX, TX
+void displayInfo()
+{
+  Serial.print(F("Location: ")); 
+  if (gps.location.isValid())
+  {
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(F(","));
+    Serial.print(gps.location.lng(), 6);
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F("  Date/Time: "));
+  if (gps.date.isValid())
+  {
+    Serial.print(gps.date.month());
+    Serial.print(F("/"));
+    Serial.print(gps.date.day());
+    Serial.print(F("/"));
+    Serial.print(gps.date.year());
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F(" "));
+  if (gps.time.isValid())
+  {
+    if (gps.time.hour() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.hour());
+    Serial.print(F(":"));
+    if (gps.time.minute() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.minute());
+    Serial.print(F(":"));
+    if (gps.time.second() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.second());
+    Serial.print(F("."));
+    if (gps.time.centisecond() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.centisecond());
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.println();
+}
+// END GPS Declarations
+
+// MOTOR DECLARATIONS
+#define MOTOR_PIN 9
+#define SERVO_PIN 10
+int motor_pin = MOTOR_PIN;
+Servo myServo;
+int servoAngle = 0; // Initial angle for the servo
+// END MOTOR DECLARATIONS
+
+// WiFi Credentials
+#define SECRET_SSID "DennisNet"
+#define SECRET_PASS "dennis_is_a_menace"
 char ssid[] = SECRET_SSID; // your network SSID (name)
 char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;          // your network key index number (needed only for WEP)
-
-int motor_pin = MOTOR_PIN;
 int status = WL_IDLE_STATUS;
+// END WiFi Credentials
 
-Servo myServo;
-int servoAngle = 0; // Initial angle for the servo
-
+// HTTP Declarations
 WiFiServer server(80);
 class HttpRequest {
 public:
@@ -172,16 +234,23 @@ void respond(HttpRequest& request, WiFiClient& client) {
   // Send the HTTP response
   client.println(HttpResponse(200, "OK", "application/json", responseBodyString).toString());*/
 }
+// END HTTP Declarations
+
 
 void setup()
 {
   Serial.begin(9600);
   while (!Serial)
   {
+    delay(1);
   }
+  // Initialize Motors
   pinMode(motor_pin, OUTPUT);
   myServo.attach(SERVO_PIN);
-  myServo.write(servoAngle); // Set the initial angle for the servo
+  myServo.write(servoAngle);
+
+  // Initialize GPS
+  ss.begin(GPSBaud);
   /*if (WiFi.status() == WL_NO_MODULE)
   {
     Serial.println("Communication with WiFi module failed!");
@@ -216,6 +285,19 @@ void setup()
 
 void loop()
 {
+  
+  if (ss.available()) {
+    while (ss.available()) {
+      char c = ss.read();
+      Serial.print(c); // Debug: Print raw GPS data
+      gps.encode(c);
+    }
+    if (gps.location.isUpdated()) {
+      displayInfo();
+    }
+  } else {
+    Serial.println(F("No data available from GPS module."));
+  }
 
   // compare the previous status to the current status
   if (status != WiFi.status())
