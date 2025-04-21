@@ -157,7 +157,7 @@ const std::string htmlContent = R"(
             };
             xhr.send();
         }
-        // setInterval(updateDistance, 500); // Update distance every second
+        setInterval(updateDistance, 500); // Update distance every second
 
 
     </script>

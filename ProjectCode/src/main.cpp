@@ -129,29 +129,36 @@ public:
     }
 
     int bodyStart = rawData.indexOf("\r\n\r\n");
-    if (bodyStart != -1 && bodyStart + 4 < rawData.length())
+    if (bodyStart != -1)
     {
       String bodyString = rawData.substring(bodyStart + 4);
       if (!bodyString.isEmpty())
       {
-        StaticJsonDocument<512> tempDoc; // Use a temporary document to avoid overwriting the class member
-        DeserializationError error = deserializeJson(tempDoc, bodyString);
-        if (!error)
-        {
-          body = tempDoc; // Copy the parsed JSON into the class member
-        }
-        else
+        DeserializationError error = deserializeJson(body, bodyString);
+        if (error)
         {
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
           body.clear(); // Clear the body to avoid using invalid data
         }
       }
+      else
+      {
+        Serial.println(F("deserializeJson() failed: EmptyInput"));
+        body.clear();
+      }
     }
     else
     {
-      body.clear(); // No body found
+      Serial.println(F("No body found in the request"));
+      body.clear();
     }
+    /*
+    if (bodyStart != -1) {
+      body = rawData.substring(bodyStart + 4);
+    } else {
+      body = "";
+    }*/
 
     contentType = extractHeaderValue(rawData, "Content-Type: ");
     userAgent = extractHeaderValue(rawData, "User-Agent: ");
@@ -449,7 +456,6 @@ void loop()
 
     client.println(HttpResponse(200, "OK", "application/json", responseBodyString).toString());*/
     // Handle the request and send a response
-    Serial.println("Received request: " + data);
     HttpRequest request(data);
     respond(request, client);
 
