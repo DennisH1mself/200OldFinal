@@ -288,7 +288,7 @@ void respond(HttpRequest &request, WiFiClient &client)
       client.println(HttpResponse(400, "Bad Request", "application/json", "{\"error\": \"Invalid servo value\"}").toString());
     }
   }
-  else if (request.method == "GET" && request.path == "/control/distance")
+  /*else if (request.method == "GET" && request.path == "/control/distance")
   {
     updateDistance(); // Update the distance value using ultrasonic sensor
     // Handle POST request for servo control
@@ -299,7 +299,7 @@ void respond(HttpRequest &request, WiFiClient &client)
     String responseBody;
     serializeJson(response, responseBody);
     client.println(HttpResponse(200, "OK", "application/json", responseBody).toString());
-  }
+  }*/
   else
   {
     // Handle other requests (e.g., POST, PUT, DELETE)
